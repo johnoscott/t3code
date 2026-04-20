@@ -33,6 +33,13 @@ const decodeThreadTurnStartRequestedPayload = Schema.decodeUnknownEffect(
 const decodeOrchestrationLatestTurn = Schema.decodeUnknownEffect(OrchestrationLatestTurn);
 const decodeOrchestrationProposedPlan = Schema.decodeUnknownEffect(OrchestrationProposedPlan);
 const decodeOrchestrationSession = Schema.decodeUnknownEffect(OrchestrationSession);
+
+function getOptionValue(
+  options: ReadonlyArray<{ id: string; value: unknown }> | undefined,
+  id: string,
+): unknown {
+  return options?.find((option) => option.id === id)?.value;
+}
 const decodeThreadCreatedPayload = Schema.decodeUnknownEffect(ThreadCreatedPayload);
 const decodeOrchestrationCommand = Schema.decodeUnknownEffect(OrchestrationCommand);
 const decodeOrchestrationEvent = Schema.decodeUnknownEffect(OrchestrationEvent);
@@ -364,16 +371,16 @@ it.effect("accepts provider-scoped model options in thread.turn.start", () =>
       modelSelection: {
         provider: "codex",
         model: "gpt-5.3-codex",
-        options: {
-          reasoningEffort: "high",
-          fastMode: true,
-        },
+        options: [
+          { id: "reasoningEffort", value: "high" },
+          { id: "fastMode", value: true },
+        ],
       },
       createdAt: "2026-01-01T00:00:00.000Z",
     });
     assert.strictEqual(parsed.modelSelection?.provider, "codex");
-    assert.strictEqual(parsed.modelSelection?.options?.reasoningEffort, "high");
-    assert.strictEqual(parsed.modelSelection?.options?.fastMode, true);
+    assert.strictEqual(getOptionValue(parsed.modelSelection?.options, "reasoningEffort"), "high");
+    assert.strictEqual(getOptionValue(parsed.modelSelection?.options, "fastMode"), true);
   }),
 );
 

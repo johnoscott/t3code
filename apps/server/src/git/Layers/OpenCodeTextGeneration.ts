@@ -7,6 +7,7 @@ import {
   type OpenCodeModelSelection,
 } from "@t3tools/contracts";
 import { sanitizeBranchFragment, sanitizeFeatureBranchName } from "@t3tools/shared/git";
+import { getModelSelectionOptionValue } from "@t3tools/shared/model";
 
 import { ServerConfig } from "../../config.ts";
 import { resolveAttachmentPath } from "../../attachmentStore.ts";
@@ -324,11 +325,13 @@ const makeOpenCodeTextGeneration = Effect.gen(function* () {
           const result = await client.session.prompt({
             sessionID: session.data.id,
             model: parsedModel,
-            ...(input.modelSelection.options?.agent
-              ? { agent: input.modelSelection.options.agent }
+            ...(typeof getModelSelectionOptionValue(input.modelSelection, "agent") === "string"
+              ? { agent: getModelSelectionOptionValue(input.modelSelection, "agent") as string }
               : {}),
-            ...(input.modelSelection.options?.variant
-              ? { variant: input.modelSelection.options.variant }
+            ...(typeof getModelSelectionOptionValue(input.modelSelection, "variant") === "string"
+              ? {
+                  variant: getModelSelectionOptionValue(input.modelSelection, "variant") as string,
+                }
               : {}),
             parts: [{ type: "text", text: input.prompt }, ...fileParts],
           });

@@ -13,6 +13,7 @@ import {
 } from "@t3tools/contracts";
 import { Cause, Effect, Exit, Layer, Queue, Ref, Scope, Stream } from "effect";
 import type { OpencodeClient, Part, PermissionRequest, QuestionRequest } from "@opencode-ai/sdk/v2";
+import { getModelSelectionOptionValue } from "@t3tools/shared/model";
 
 import { resolveAttachmentPath } from "../../attachmentStore.ts";
 import { ServerConfig } from "../../config.ts";
@@ -1146,16 +1147,19 @@ export function makeOpenCodeAdapterLive(options?: OpenCodeAdapterLiveOptions) {
 
         const agent =
           input.modelSelection?.provider === PROVIDER
-            ? input.modelSelection.options?.agent
+            ? getModelSelectionOptionValue(input.modelSelection, "agent")
             : undefined;
         const variant =
           input.modelSelection?.provider === PROVIDER
-            ? input.modelSelection.options?.variant
+            ? getModelSelectionOptionValue(input.modelSelection, "variant")
             : undefined;
+        const selectedAgent = typeof agent === "string" ? agent : undefined;
+        const selectedVariant = typeof variant === "string" ? variant : undefined;
 
         context.activeTurnId = turnId;
-        context.activeAgent = agent ?? (input.interactionMode === "plan" ? "plan" : undefined);
-        context.activeVariant = variant;
+        context.activeAgent =
+          selectedAgent ?? (input.interactionMode === "plan" ? "plan" : undefined);
+        context.activeVariant = selectedVariant;
         updateProviderSession(
           context,
           {
@@ -1171,7 +1175,7 @@ export function makeOpenCodeAdapterLive(options?: OpenCodeAdapterLiveOptions) {
           type: "turn.started",
           payload: {
             model: modelSelection?.model ?? context.session.model,
-            ...(variant ? { effort: variant } : {}),
+            ...(selectedVariant ? { effort: selectedVariant } : {}),
           },
         });
 

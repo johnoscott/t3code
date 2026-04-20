@@ -2,86 +2,56 @@ import { Schema } from "effect";
 import { TrimmedNonEmptyString } from "./baseSchemas.ts";
 import type { ProviderKind } from "./orchestration.ts";
 
-export const CODEX_REASONING_EFFORT_OPTIONS = ["xhigh", "high", "medium", "low"] as const;
-export const CodexReasoningEffort = Schema.Literals(CODEX_REASONING_EFFORT_OPTIONS);
-export type CodexReasoningEffort = typeof CodexReasoningEffort.Type;
-export const CLAUDE_AGENT_EFFORT_OPTIONS = [
-  "low",
-  "medium",
-  "high",
-  "xhigh",
-  "max",
-  "ultrathink",
-] as const;
-export const ClaudeAgentEffort = Schema.Literals(CLAUDE_AGENT_EFFORT_OPTIONS);
-export type ClaudeAgentEffort = typeof ClaudeAgentEffort.Type;
-export type ClaudeCodeEffort = ClaudeAgentEffort;
-export const CURSOR_REASONING_OPTIONS = ["low", "medium", "high", "max", "xhigh"] as const;
-export const CursorReasoningOption = Schema.Literals(CURSOR_REASONING_OPTIONS);
-export type CursorReasoningOption = typeof CursorReasoningOption.Type;
+export const ProviderOptionDescriptorType = Schema.Literals(["select", "boolean"]);
+export type ProviderOptionDescriptorType = typeof ProviderOptionDescriptorType.Type;
 
-export type ProviderReasoningEffort =
-  | CodexReasoningEffort
-  | ClaudeAgentEffort
-  | CursorReasoningOption;
-
-export const CodexModelOptions = Schema.Struct({
-  reasoningEffort: Schema.optional(CodexReasoningEffort),
-  fastMode: Schema.optional(Schema.Boolean),
-});
-export type CodexModelOptions = typeof CodexModelOptions.Type;
-
-export const ClaudeModelOptions = Schema.Struct({
-  thinking: Schema.optional(Schema.Boolean),
-  effort: Schema.optional(ClaudeAgentEffort),
-  fastMode: Schema.optional(Schema.Boolean),
-  contextWindow: Schema.optional(Schema.String),
-});
-export type ClaudeModelOptions = typeof ClaudeModelOptions.Type;
-
-export const CursorModelOptions = Schema.Struct({
-  reasoning: Schema.optional(CursorReasoningOption),
-  fastMode: Schema.optional(Schema.Boolean),
-  thinking: Schema.optional(Schema.Boolean),
-  contextWindow: Schema.optional(Schema.String),
-});
-export type CursorModelOptions = typeof CursorModelOptions.Type;
-export const OpenCodeModelOptions = Schema.Struct({
-  variant: Schema.optional(TrimmedNonEmptyString),
-  agent: Schema.optional(TrimmedNonEmptyString),
-});
-export type OpenCodeModelOptions = typeof OpenCodeModelOptions.Type;
-
-export const ProviderModelOptions = Schema.Struct({
-  codex: Schema.optional(CodexModelOptions),
-  claudeAgent: Schema.optional(ClaudeModelOptions),
-  cursor: Schema.optional(CursorModelOptions),
-  opencode: Schema.optional(OpenCodeModelOptions),
-});
-export type ProviderModelOptions = typeof ProviderModelOptions.Type;
-
-export const EffortOption = Schema.Struct({
-  value: TrimmedNonEmptyString,
+export const ProviderOptionChoice = Schema.Struct({
+  id: TrimmedNonEmptyString,
   label: TrimmedNonEmptyString,
+  description: Schema.optional(TrimmedNonEmptyString),
   isDefault: Schema.optional(Schema.Boolean),
 });
-export type EffortOption = typeof EffortOption.Type;
+export type ProviderOptionChoice = typeof ProviderOptionChoice.Type;
 
-export const ContextWindowOption = Schema.Struct({
-  value: TrimmedNonEmptyString,
+const ProviderOptionDescriptorBase = {
+  id: TrimmedNonEmptyString,
   label: TrimmedNonEmptyString,
-  isDefault: Schema.optional(Schema.Boolean),
+  description: Schema.optional(TrimmedNonEmptyString),
+} as const;
+
+export const SelectProviderOptionDescriptor = Schema.Struct({
+  ...ProviderOptionDescriptorBase,
+  type: Schema.Literal("select"),
+  options: Schema.Array(ProviderOptionChoice),
+  currentValue: Schema.optional(TrimmedNonEmptyString),
+  promptInjectedValues: Schema.optional(Schema.Array(TrimmedNonEmptyString)),
 });
-export type ContextWindowOption = typeof ContextWindowOption.Type;
+export type SelectProviderOptionDescriptor = typeof SelectProviderOptionDescriptor.Type;
+
+export const BooleanProviderOptionDescriptor = Schema.Struct({
+  ...ProviderOptionDescriptorBase,
+  type: Schema.Literal("boolean"),
+  currentValue: Schema.optional(Schema.Boolean),
+});
+export type BooleanProviderOptionDescriptor = typeof BooleanProviderOptionDescriptor.Type;
+
+export const ProviderOptionDescriptor = Schema.Union([
+  SelectProviderOptionDescriptor,
+  BooleanProviderOptionDescriptor,
+]);
+export type ProviderOptionDescriptor = typeof ProviderOptionDescriptor.Type;
+
+export const ProviderOptionSelectionValue = Schema.Union([TrimmedNonEmptyString, Schema.Boolean]);
+export type ProviderOptionSelectionValue = typeof ProviderOptionSelectionValue.Type;
+
+export const ProviderOptionSelection = Schema.Struct({
+  id: TrimmedNonEmptyString,
+  value: ProviderOptionSelectionValue,
+});
+export type ProviderOptionSelection = typeof ProviderOptionSelection.Type;
 
 export const ModelCapabilities = Schema.Struct({
-  reasoningEffortLevels: Schema.Array(EffortOption),
-  supportsFastMode: Schema.Boolean,
-  supportsThinkingToggle: Schema.Boolean,
-  contextWindowOptions: Schema.Array(ContextWindowOption),
-  promptInjectedEffortLevels: Schema.Array(TrimmedNonEmptyString),
-  variantOptions: Schema.optional(Schema.Array(EffortOption)),
-  agentOptions: Schema.optional(Schema.Array(EffortOption)),
+  optionDescriptors: Schema.optional(Schema.Array(ProviderOptionDescriptor)),
 });
 export type ModelCapabilities = typeof ModelCapabilities.Type;
 

@@ -2,13 +2,7 @@ import { Effect } from "effect";
 import * as Schema from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import { TrimmedNonEmptyString, TrimmedString } from "./baseSchemas.ts";
-import {
-  ClaudeModelOptions,
-  CodexModelOptions,
-  CursorModelOptions,
-  DEFAULT_GIT_TEXT_GENERATION_MODEL_BY_PROVIDER,
-  OpenCodeModelOptions,
-} from "./model.ts";
+import { DEFAULT_GIT_TEXT_GENERATION_MODEL_BY_PROVIDER, ProviderOptionSelection } from "./model.ts";
 import { ModelSelection, ProviderKind } from "./orchestration.ts";
 
 // ── Client Settings (local-only) ───────────────────────────────
@@ -170,50 +164,26 @@ export const DEFAULT_UNIFIED_SETTINGS: UnifiedSettings = {
 
 // ── Server Settings Patch (replace with a Schema.deepPartial if available) ──────────────────────────────────────────
 
-const CodexModelOptionsPatch = Schema.Struct({
-  reasoningEffort: Schema.optionalKey(CodexModelOptions.fields.reasoningEffort),
-  fastMode: Schema.optionalKey(CodexModelOptions.fields.fastMode),
-});
-
-const ClaudeModelOptionsPatch = Schema.Struct({
-  thinking: Schema.optionalKey(ClaudeModelOptions.fields.thinking),
-  effort: Schema.optionalKey(ClaudeModelOptions.fields.effort),
-  fastMode: Schema.optionalKey(ClaudeModelOptions.fields.fastMode),
-  contextWindow: Schema.optionalKey(ClaudeModelOptions.fields.contextWindow),
-});
-
-const CursorModelOptionsPatch = Schema.Struct({
-  reasoning: Schema.optionalKey(CursorModelOptions.fields.reasoning),
-  fastMode: Schema.optionalKey(CursorModelOptions.fields.fastMode),
-  thinking: Schema.optionalKey(CursorModelOptions.fields.thinking),
-  contextWindow: Schema.optionalKey(CursorModelOptions.fields.contextWindow),
-});
-
-const OpenCodeModelOptionsPatch = Schema.Struct({
-  variant: Schema.optionalKey(OpenCodeModelOptions.fields.variant),
-  agent: Schema.optionalKey(OpenCodeModelOptions.fields.agent),
-});
-
 const ModelSelectionPatch = Schema.Union([
   Schema.Struct({
     provider: Schema.optionalKey(Schema.Literal("codex")),
     model: Schema.optionalKey(TrimmedNonEmptyString),
-    options: Schema.optionalKey(CodexModelOptionsPatch),
+    options: Schema.optionalKey(Schema.Array(ProviderOptionSelection)),
   }),
   Schema.Struct({
     provider: Schema.optionalKey(Schema.Literal("claudeAgent")),
     model: Schema.optionalKey(TrimmedNonEmptyString),
-    options: Schema.optionalKey(ClaudeModelOptionsPatch),
+    options: Schema.optionalKey(Schema.Array(ProviderOptionSelection)),
   }),
   Schema.Struct({
     provider: Schema.optionalKey(Schema.Literal("cursor")),
     model: Schema.optionalKey(TrimmedNonEmptyString),
-    options: Schema.optionalKey(CursorModelOptionsPatch),
+    options: Schema.optionalKey(Schema.Array(ProviderOptionSelection)),
   }),
   Schema.Struct({
     provider: Schema.optionalKey(Schema.Literal("opencode")),
     model: Schema.optionalKey(TrimmedNonEmptyString),
-    options: Schema.optionalKey(OpenCodeModelOptionsPatch),
+    options: Schema.optionalKey(Schema.Array(ProviderOptionSelection)),
   }),
 ]);
 
